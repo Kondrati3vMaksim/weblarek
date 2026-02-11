@@ -114,58 +114,61 @@ Presenter - презентер содержит основную логику п
 
 ```typescript
 interface IProduct {
-  id: string; //уникальный номер товара
-  description: string; //описание товара
-  image: string; //Url изображения товара
-  title: string; //Название товара
-  category: string; //Категория товара
-  price: number | null; // цена товара(null для товара без цены)
+  id: string; // Уникальный номер товара
+  description: string; // Описание товара
+  image: string; // URL изображения товара
+  title: string; // Название товара
+  category: string; // Категория товара
+  price: number | null; // цена товара (null для товара без цены)
 }
 ```
 
-Описывает структуру данных товара, котоый отображается в каталоге и может быть добавлен в карзину.
+Описывает структуру данных товара, который отображается в каталоге и может быть добавлен в корзину.
 
 ### Данные покупателя
 
 ```typescript
 interface IBuyer {
-  payment: Tpayment; // Способ оплаты
+  payment: TPayment; // Способ оплаты
   email: string; // Электронная почта
   phone: string; // Номер телефона
   address: string; // Адрес доставки
 }
 ```
 
-Структура пользователя, необъодимая для заказа.
+Структура покупателя, необходимая для заказа.
 
 ## Модели данных
 
 Для хранения и управления данными товаров, доступных для покупки в приложении.
 
 ### Класс Catalog
+
 Хранение товаров, которые можно купить в приложении;
 
-Конструктор не принимает параметров;
+Конструктор не принимает параметров:
 
-```typesript
+```typescript
 constructor();
 ```
 
 Поля класса:
 `products: IProduct[]` - Массив всех товаров;
-`currentProduct: IProduct | null` - Товар, выбраный для подобного отображения;
+`currentProduct: IProduct | null` - Товар, выбранный для подробного отображения;
 
 Методы класса:
-`saveProducts(data: IProdct[]): void` - Сохраняет массив товаров, заменяя существующие данные;
-`getProducts(): IProduct[]` - Проучение массива товаров из модели;
+`saveProducts(data: IProduct[]): void` - Сохраняет массив товаров, заменяя существующие данные;
+`getProducts(): IProduct[]` - Получение массива товаров из модели;
 `getProductById(id: string): IProduct | null` - Получение товара по его id;
-`saveCurrentProduct(data: IProduct | null): void` - Сохранение товаров для подробного отображения;
+`saveCurrentProduct(data: IProduct | null): void` - Сохранение товара для подробного отображения;
 `getCurrentProduct(): IProduct | null` - Получение товара для подробного отображения;
 
 ### Класс Basket
+
 Хранение товаров, которые пользователь выбрал для покупки;
 
-Конструктор класса не прнимает параметров;
+Конструктор класса не принимает параметров:
+
 ```typescript
 constructor();
 ```
@@ -180,32 +183,34 @@ constructor();
 `clean(): void` - Очистка корзины;
 `getTotalPrice(): number` - Получение стоимости всех товаров в корзине;
 `getTotalCount(): number` - Получение количества товаров в корзине;
-`isProductIn(id: string): boolean` - Проверка наличия товара в карзине по его id;
+`isProductIn(id: string): boolean` - Проверка наличия товара в корзине по его id;
 
 ### Класс Buyer
 
 Отвечает за хранение и валидацию данных покупателя, необходимых для оформления заказа.
 
-Конструктор не принимает парамтров
+Конструктор не принимает параметров:
+
 ```typescript
-constructor():
+constructor();
 ```
 
 Поля класса:
-`payment: TPayment`- Вид оплаты;
+`payment: TPayment` - Вид оплаты;
 `address: string` - Адрес;
 `email: string` - Адрес электронной почты;
 `phone: string` - Номер телефона;
 
 Методы класса:
 `savePayment(payment: TPayment): void` - Сохранение способа оплаты;
-`saveEmail(email: string): void` - Сохранение адресса электронной почты;
+`saveEmail(email: string): void` - Сохранение адреса электронной почты;
 `savePhone(phone: string): void` - Сохранение телефонного номера;
-`saveAddress(address: strig): void` - Сохранение адресса;
-`getBuyerData(): Ibuyer | null` - Получение всех данных пользователя;
+`saveAddress(address: string): void` - Сохранение адреса;
+`getBuyerData(): IBuyer | null` - Получение всех данных покупателя;
 `clean(): void` - Очистка данных покупателя;
 `validate(): {payment?: string; email?: string; phone?: string; address?: string}` - Проверка корректности всех данных покупателя;
 Пример возвращаемого значения в случае ошибки в полях payment, phone, address, email:
+
 ```typescript
 {
   payment: "Не выбран вид оплаты",
