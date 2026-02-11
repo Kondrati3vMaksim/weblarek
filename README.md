@@ -154,13 +154,18 @@ constructor();
 
 Поля класса:
 `products: IProduct[]` - Массив всех товаров;
+
 `currentProduct: IProduct | null` - Товар, выбранный для подробного отображения;
 
 Методы класса:
 `saveProducts(data: IProduct[]): void` - Сохраняет массив товаров, заменяя существующие данные;
+
 `getProducts(): IProduct[]` - Получение массива товаров из модели;
+
 `getProductById(id: string): IProduct | null` - Получение товара по его id;
+
 `saveCurrentProduct(data: IProduct | null): void` - Сохранение товара для подробного отображения;
+
 `getCurrentProduct(): IProduct | null` - Получение товара для подробного отображения;
 
 ### Класс Basket
@@ -178,11 +183,17 @@ constructor();
 
 Методы класса:
 `getProducts(): IProduct[]` - Получение массива товаров, которые находятся в корзине;
+
 `addProduct(product: IProduct): void` - Добавление товара, который был получен в параметре, в массив корзины;
+
 `removeProduct(productId: string): void` - Удаление товара, полученного в параметре из массива корзины;
+
 `clean(): void` - Очистка корзины;
+
 `getTotalPrice(): number` - Получение стоимости всех товаров в корзине;
+
 `getTotalCount(): number` - Получение количества товаров в корзине;
+
 `isProductIn(id: string): boolean` - Проверка наличия товара в корзине по его id;
 
 ### Класс Buyer
@@ -203,14 +214,20 @@ constructor();
 
 Методы класса:
 `savePayment(payment: TPayment): void` - Сохранение способа оплаты;
-`saveEmail(email: string): void` - Сохранение адреса электронной почты;
-`savePhone(phone: string): void` - Сохранение телефонного номера;
-`saveAddress(address: string): void` - Сохранение адреса;
-`getBuyerData(): IBuyer | null` - Получение всех данных покупателя;
-`clean(): void` - Очистка данных покупателя;
-`validate(): {payment?: string; email?: string; phone?: string; address?: string}` - Проверка корректности всех данных покупателя;
-Пример возвращаемого значения в случае ошибки в полях payment, phone, address, email:
 
+`saveEmail(email: string): void` - Сохранение адреса электронной почты;
+
+`savePhone(phone: string): void` - Сохранение телефонного номера;
+
+`saveAddress(address: string): void` - Сохранение адреса;
+
+`getBuyerData(): IBuyer | null` - Получение всех данных покупателя;
+
+`clean(): void` - Очистка данных покупателя;
+
+`validate(): {payment?: string; email?: string; phone?: string; address?: string}` - Проверка корректности всех данных покупателя;
+
+Пример возвращаемого значения в случае ошибки в полях payment, phone, address, email:
 ```typescript
 {
   payment: "Не выбран вид оплаты",
@@ -218,4 +235,16 @@ constructor();
   address: "Укажите адрес доставки",
   phone: "Укажите номер телефона"
 }
+```
+
+## Слой коммуникации
+
+### Класс AppApi
+
+Отвечает за получение данных с сервера и отправку данных на сервер
+
+**Конструктор:**
+
+```typescript
+constructor(api: IApi)
 ```
