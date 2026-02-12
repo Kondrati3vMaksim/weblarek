@@ -153,11 +153,13 @@ constructor();
 ```
 
 Поля класса:
+
 `products: IProduct[]` - Массив всех товаров;
 
 `currentProduct: IProduct | null` - Товар, выбранный для подробного отображения;
 
 Методы класса:
+
 `saveProducts(data: IProduct[]): void` - Сохраняет массив товаров, заменяя существующие данные;
 
 `getProducts(): IProduct[]` - Получение массива товаров из модели;
@@ -179,9 +181,11 @@ constructor();
 ```
 
 Поля класса:
+
 `products: IProduct[]` - Массив товаров, выбранных покупателем для покупки;
 
 Методы класса:
+
 `getProducts(): IProduct[]` - Получение массива товаров, которые находятся в корзине;
 
 `addProduct(product: IProduct): void` - Добавление товара, который был получен в параметре, в массив корзины;
@@ -207,12 +211,14 @@ constructor();
 ```
 
 Поля класса:
+
 `payment: TPayment` - Вид оплаты;
 `address: string` - Адрес;
 `email: string` - Адрес электронной почты;
 `phone: string` - Номер телефона;
 
 Методы класса:
+
 `savePayment(payment: TPayment): void` - Сохранение способа оплаты;
 
 `saveEmail(email: string): void` - Сохранение адреса электронной почты;
@@ -248,3 +254,12 @@ constructor();
 ```typescript
 constructor(api: IApi)
 ```
+Поля класса:
+
+`api: IApi` // Экземпляр класса API для выполнения HTTP-запросов;
+
+Метод класса:
+
+`getProductList(): Promise<IProduct[]>` - Выполняет GET-запрос на эндпоинт /product/ и возвращает массив товаров;
+
+`postOrder(order: IOrder): Promise<IOrderResult>` - Выполняет POST-запрост на эндпоинт   /order/ с данными заказа;
