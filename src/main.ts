@@ -89,62 +89,67 @@ console.log("✅ Экземпляр AppApi создан");
 // Асинхронная функция для получения каталога с сервера
 async function loadCatalogFromServer() {
   console.log("\n=====ПОЛУЧЕНИЕ КАТАЛОГА ТОВАРОВ С СЕРВЕРА=====");
-  
+
   try {
     console.log("⏳ Выполняется запрос к /product/...");
-    
+
     // Получаем массив товаров с сервера
     const products = await appApi.getProductList();
-    
+
     console.log(`✅ Успешно! Получено товаров: ${products.length}`);
-    
+
     // Сохраняем полученные товары в модель Catalog
     catalog.saveProducts(products);
     console.log("✅ Товары сохранены в модель Catalog");
-    
+
     // Выводим сохраненный каталог в консоль для проверки
     console.log("\n=====СОХРАНЕННЫЙ КАТАЛОГ ТОВАРОВ (С СЕРВЕРА)=====:");
     console.log(`Всего товаров в каталоге: ${catalog.getProducts().length}`);
-    
+
     // Выводим первые 5 товаров
     console.log("\nПервые 5 товаров из каталога:");
     const allProducts = catalog.getProducts();
     allProducts.slice(0, 5).forEach((product, index) => {
       console.log(`${index + 1}. ${product.title}`);
       console.log(`   ID: ${product.id}`);
-      console.log(`   Цена: ${product.price !== null ? product.price + '₽' : 'Бесценно'}`);
+      console.log(
+        `   Цена: ${product.price !== null ? product.price + "₽" : "Бесценно"}`,
+      );
       console.log(`   Категория: ${product.category}`);
       console.log();
     });
-    
+
     // Проверяем работу метода getProductById
     if (allProducts.length > 0) {
       const testId = allProducts[0].id;
       const foundProduct = catalog.getProductById(testId);
       console.log(`🔍 Проверка метода getProductById():`);
       console.log(`   Поиск товара с ID: ${testId}`);
-      console.log(`   Результат: ${foundProduct ? foundProduct.title : '❌ Товар не найден'}`);
-      console.log(`   Статус: ${foundProduct ? '✅ Успешно' : '❌ Ошибка'}`);
+      console.log(
+        `   Результат: ${foundProduct ? foundProduct.title : "❌ Товар не найден"}`,
+      );
+      console.log(`   Статус: ${foundProduct ? "✅ Успешно" : "❌ Ошибка"}`);
     }
-    
+
     console.log("\n✅ КАТАЛОГ УСПЕШНО ЗАГРУЖЕН С СЕРВЕРА И СОХРАНЕН В МОДЕЛИ");
-    
   } catch (error) {
     console.error("❌ ОШИБКА ПРИ ЗАГРУЗКЕ КАТАЛОГА:");
-    
+
     if (error instanceof Error) {
       console.error(`   Тип ошибки: ${error.name}`);
       console.error(`   Сообщение: ${error.message}`);
-      
+
       // Детальная диагностика ошибок
-      if (error.message.includes('404')) {
+      if (error.message.includes("404")) {
         console.error("\n🔍 ЭНДПОЙНТ НЕ НАЙДЕН (404)");
         console.error("   Проверьте правильность URL в файле constants.ts");
-        console.error("   Должно быть: https://larek-api.nomoreparties.co/api/v1");
+        console.error(
+          "   Должно быть: https://larek-api.nomoreparties.co/api/v1",
+        );
         console.error("   Эндпоинт: /product/ (в классе AppApi)");
       }
-      
-      if (error.message.includes('Failed to fetch')) {
+
+      if (error.message.includes("Failed to fetch")) {
         console.error("\n🔍 СЕТЕВАЯ ОШИБКА");
         console.error("   Проверьте:");
         console.error("   1. Интернет-соединение");
@@ -153,7 +158,7 @@ async function loadCatalogFromServer() {
         console.error("   3. Настройки CORS");
       }
     }
-    
+
     // Используем тестовые данные как fallback
     console.log("\n⚠️ Используем тестовые данные из apiProducts");
     catalog.saveProducts(apiProducts.items);
