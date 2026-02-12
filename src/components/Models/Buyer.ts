@@ -1,4 +1,4 @@
-import { IBuyer, TPayment } from "../../types";
+import { IBuyer, TPayment, TError } from "../../types";
 
 export class Buyer {
   private payment: TPayment = "card";
@@ -47,18 +47,9 @@ export class Buyer {
   }
 
   // Проверка корректности всех данных покупателя
-  validate(): {
-    payment?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-  } {
-    const errors: {
-      payment?: string;
-      email?: string;
-      phone?: string;
-      address?: string;
-    } = {};
+  validate(): TError {
+    const errors: TError = {};
+
 
     if (!this.payment) {
       errors.payment = "Не выбран вид оплаты";
