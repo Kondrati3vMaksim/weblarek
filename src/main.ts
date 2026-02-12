@@ -161,7 +161,6 @@ async function loadCatalogFromServer() {
 
     // Используем тестовые данные как fallback
     console.log("\n⚠️ Используем тестовые данные из apiProducts");
-    catalog.saveProducts(apiProducts.items);
     console.log("✅ Тестовые товары загружены в каталог");
     console.log(`   Всего товаров: ${catalog.getProducts().length}`);
   }

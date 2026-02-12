@@ -29,16 +29,13 @@ export class Buyer {
   }
 
   // Получение всех данных покупателя
-  getBuyerData(): IBuyer | null {
-    if (this.payment && this.email && this.phone && this.address) {
-      return {
-        payment: this.payment,
-        email: this.email,
-        phone: this.phone,
-        address: this.address,
-      };
-    }
-    return null;
+  getBuyerData(): IBuyer {
+    return {
+      payment: this.payment,
+      email: this.email,
+      phone: this.phone,
+      address: this.address,
+    };
   }
 
   // Очистка данных покупателя
@@ -63,24 +60,22 @@ export class Buyer {
       address?: string;
     } = {};
 
-      if (!this.payment) {
-        errors.payment = "Не выбран вид оплаты";
-      }
+    if (!this.payment) {
+      errors.payment = "Не выбран вид оплаты";
+    }
 
-      if (!this.email) {
-        errors.email = "Укажите email";
-      } else if (!this.email.includes("@") || !this.email.includes(".")) {
-        errors.email = "Некорректный email";
-      }
+    if (!this.email) {
+      errors.email = "Укажите email";
+    }
 
-      if (!this.phone) {
-        errors.phone = "Укажите номер телефона";
-      }
+    if (!this.phone) {
+      errors.phone = "Укажите номер телефона";
+    }
 
-      if (!this.address) {
-        errors.address = "Укажите адрес доставки"
-      }
+    if (!this.address) {
+      errors.address = "Укажите адрес доставки";
+    }
 
-      return errors;
+    return errors;
   }
 }
