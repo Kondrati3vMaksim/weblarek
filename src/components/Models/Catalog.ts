@@ -1,14 +1,16 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
 export class Catalog {
   private products: IProduct[] = [];
   private currentProduct: IProduct | null = null;
 
-  constructor() {}
+  constructor(protected events: IEvents) {}
 
   // Сохраняем массив товаров, заменяя существуюзие данные
   saveProducts(data: IProduct[]): void {
     this.products = [...data];
+    this.events.emit("catalog:changed", { products: this.getProducts() });
   }
 
   // Получаем массив товаров из модели
@@ -25,6 +27,9 @@ export class Catalog {
   // Сохранение товара для подробного отображения
   saveCurrentProduct(data: IProduct | null): void {
     this.currentProduct = data;
+    this.events.emit("currentProduct:changed", {
+      product: this.currentProduct,
+    });
   }
 
   // Получение товара для подробного отображения

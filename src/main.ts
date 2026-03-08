@@ -1,176 +1,350 @@
+// src/main.ts
+
+// ==============================================
+// ИМПОРТЫ
+// ==============================================
+
 import "./scss/styles.scss";
+
+// Базовые компоненты
+import { EventEmitter } from "./components/base/Events";
 import { Api } from "./components/base/Api";
+
+// API слой
 import { AppApi } from "./components/AppApi";
 import { API_URL } from "./utils/constants";
+
+// Модели данных
 import { Catalog } from "./components/Models/Catalog";
 import { Basket } from "./components/Models/Basket";
 import { Buyer } from "./components/Models/Buyer";
-import { apiProducts } from "./utils/data";
 
-// Тестирование класса Catalog
-console.log("=== ТЕСТИРОВАНИЕ КАТАЛОГА ===");
-const catalog = new Catalog();
+// View компоненты
+import { Page } from "./components/View/Page";
+import { Modal } from "./components/View/Modal";
+import { CatalogCard } from "./components/View/Card/CardCatalog";
+import { PreviewCard } from "./components/View/Card/CardPreview";
+import { BasketCard } from "./components/View/Card/CardBasket";
+import { Basket as BasketView } from "./components/View/Basket";
+import { OrderForm } from "./components/View/FormOrder";
+import { ContactsForm } from "./components/View/FormContacts";
+import { Success } from "./components/View/Success";
 
-// Сохраняем товары из utils/data.ts
-catalog.saveProducts(apiProducts.items);
-console.log("1. Сохраненные товары: ", catalog.getProducts());
+// Утилиты
+import { cloneTemplate, ensureElement } from "./utils/utils";
 
-// Получаем товар по ID
-const product = catalog.getProductById(apiProducts.items[0].id);
-console.log("2. Товар по ID: ", product);
+// Типы
+import {
+  IProduct,
+  IBuyer,
+  TPayment,
+  TError,
+  IOrder,
+  IOrderResult,
+} from "./types";
 
-// Работа с текущим товаром
-catalog.saveCurrentProduct(product);
-console.log("3. Текущий товар: ", catalog.getCurrentProduct());
+// 1. ИНИЦИАЛИЗАЦИЯ
+const events = new EventEmitter();
 
-// Тестирование класса Basket
-console.log("\n=== ТЕСТИРОВАНИЕ КОРЗИНЫ ===");
-const basket = new Basket();
+const catalog = new Catalog(events);
+const basket = new Basket(events);
+const buyer = new Buyer(events);
 
-// Добавляем товар
-if (product) {
-  basket.addProduct(product);
-  basket.addProduct(apiProducts.items[1]);
-}
-console.log("1. Товары в корзине: ", basket.getProducts());
-console.log("2. Количество товаров: ", basket.getTotalCount());
-console.log("3. Общая стоимость: ", basket.getTotalPrice());
-console.log(
-  "4. Проверка наличия товаров: ",
-  basket.isProductIn(product?.id || ""),
-);
-
-// Удаляем товар
-basket.removeProduct(apiProducts.items[1].id);
-console.log("5. После удаления товаров: ", basket.getProducts().length);
-
-// Очищаем корзину
-basket.clean();
-console.log("6. После очистки: ", basket.getProducts().length);
-
-// Тестирование класса Buyer();
-console.log("\n === ТЕСТИРОВАНИЕ ПОКУПАТЕЛЯ ===");
-const buyer = new Buyer();
-
-// Сохраяем данные
-buyer.savePayment("card");
-buyer.saveEmail("main@example.com");
-buyer.savePhone("+3755555555");
-buyer.saveAddress("ул. Небраска. д.1");
-
-console.log("1. Данные покупателя: ", buyer.getBuyerData());
-
-// Проверяем валидацию
-console.log("2. Валидация (все поля заполнены): ", buyer.validate());
-
-// Проверяем частичное заполнение
-buyer.clean();
-buyer.saveEmail("main@example.com");
-console.log("3. Валидация (частичное заполнение): ", buyer.validate());
-
-// Проверяем некорректный email
-buyer.saveEmail("некорректный email");
-console.log("4. Валидация (некорректный email): ", buyer.validate());
-
-console.log("\n === ТЕСТИРОВАНИЕ ЗАВЕРШЕНО");
-
-// ЧАСТЬ 2: РАБОТА С СЕРВЕРОМ
-
-console.log("\n=== ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===");
-
-// Создаем экземпляр базового API с URL из констант
 const baseApi = new Api(API_URL);
-console.log("✅ Экземпляр Api создан, URL:", API_URL);
-
-// Создаем экземпляр нашего AppApi
 const appApi = new AppApi(baseApi);
-console.log("✅ Экземпляр AppApi создан");
 
-// Асинхронная функция для получения каталога с сервера
-async function loadCatalogFromServer() {
-  console.log("\n=====ПОЛУЧЕНИЕ КАТАЛОГА ТОВАРОВ С СЕРВЕРА=====");
+// 2. ПОЛУЧЕНИЕ ШАБЛОНОВ
+const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
+const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
+const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
+const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
+const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
+const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
-  try {
-    console.log("⏳ Выполняется запрос к /product/...");
+// 3. СОЗДАНИЕ КОМПОНЕНТОВ
+const page = new Page(document.body, events);
+const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events);
 
-    // Получаем массив товаров с сервера
-    const products = await appApi.getProductList();
+// Храним ссылки на текущие компоненты
+let currentPreview: PreviewCard | null = null;
+let currentBasket: BasketView | null = null;
+let currentOrder: OrderForm | null = null;
+let currentContacts: ContactsForm | null = null;
+let currentSuccess: Success | null = null;
 
-    console.log(`✅ Успешно! Получено товаров: ${products.length}`);
-
-    // Сохраняем полученные товары в модель Catalog
+// 4. ЗАГРУЗКА ДАННЫХ
+appApi.getProductList()
+  .then(products => {
     catalog.saveProducts(products);
-    console.log("✅ Товары сохранены в модель Catalog");
+  })
+  .catch(error => {
+    console.error('Ошибка загрузки каталога:', error);
+  });
 
-    // Выводим сохраненный каталог в консоль для проверки
-    console.log("\n=====СОХРАНЕННЫЙ КАТАЛОГ ТОВАРОВ (С СЕРВЕРА)=====:");
-    console.log(`Всего товаров в каталоге: ${catalog.getProducts().length}`);
+// 5. ОБРАБОТЧИКИ СОБЫТИЙ МОДЕЛЕЙ
+events.on('catalog:changed', (data: { products: IProduct[] }) => {
+  const cards = data.products.map(item => {
+    const card = new CatalogCard(
+      cloneTemplate<HTMLElement>(cardCatalogTemplate),
+      events
+    );
+    card.render(item);
+    card.id = item.id;
+    // Используем геттер для получения корневого элемента
+    return card.getContainer();
+  });
+  page.catalog = cards;
+});
 
-    // Выводим первые 5 товаров
-    console.log("\nПервые 5 товаров из каталога:");
-    const allProducts = catalog.getProducts();
-    allProducts.slice(0, 5).forEach((product, index) => {
-      console.log(`${index + 1}. ${product.title}`);
-      console.log(`   ID: ${product.id}`);
-      console.log(
-        `   Цена: ${product.price !== null ? product.price + "₽" : "Бесценно"}`,
-      );
-      console.log(`   Категория: ${product.category}`);
-      console.log();
-    });
-
-    // Проверяем работу метода getProductById
-    if (allProducts.length > 0) {
-      const testId = allProducts[0].id;
-      const foundProduct = catalog.getProductById(testId);
-      console.log(`🔍 Проверка метода getProductById():`);
-      console.log(`   Поиск товара с ID: ${testId}`);
-      console.log(
-        `   Результат: ${foundProduct ? foundProduct.title : "❌ Товар не найден"}`,
-      );
-      console.log(`   Статус: ${foundProduct ? "✅ Успешно" : "❌ Ошибка"}`);
-    }
-
-    console.log("\n✅ КАТАЛОГ УСПЕШНО ЗАГРУЖЕН С СЕРВЕРА И СОХРАНЕН В МОДЕЛИ");
-  } catch (error) {
-    console.error("❌ ОШИБКА ПРИ ЗАГРУЗКЕ КАТАЛОГА:");
-
-    if (error instanceof Error) {
-      console.error(`   Тип ошибки: ${error.name}`);
-      console.error(`   Сообщение: ${error.message}`);
-
-      // Детальная диагностика ошибок
-      if (error.message.includes("404")) {
-        console.error("\n🔍 ЭНДПОЙНТ НЕ НАЙДЕН (404)");
-        console.error("   Проверьте правильность URL в файле constants.ts");
-        console.error(
-          "   Должно быть: https://larek-api.nomoreparties.co/api/v1",
-        );
-        console.error("   Эндпоинт: /product/ (в классе AppApi)");
-      }
-
-      if (error.message.includes("Failed to fetch")) {
-        console.error("\n🔍 СЕТЕВАЯ ОШИБКА");
-        console.error("   Проверьте:");
-        console.error("   1. Интернет-соединение");
-        console.error("   2. Доступность сервера в браузере:");
-        console.error(`      ${API_URL}/product/`);
-        console.error("   3. Настройки CORS");
-      }
-    }
-
-    // Используем тестовые данные как fallback
-    console.log("\n⚠️ Используем тестовые данные из apiProducts");
-    console.log("✅ Тестовые товары загружены в каталог");
-    console.log(`   Всего товаров: ${catalog.getProducts().length}`);
-  }
+// отдельный интерфейс для данных превью
+interface IPreviewData extends IProduct {
+  inBasket: boolean;
 }
 
-// Запускаем загрузку каталога с сервера
-loadCatalogFromServer().then(() => {
-  console.log("\n=== РАБОТА НАД ПЕРВОЙ ЧАСТЬЮ ПРОЕКТА ЗАВЕРШЕНА ===");
-  console.log("✅ Модели данных протестированы");
-  console.log("✅ Класс AppApi создан и работает");
-  console.log("✅ Данные с сервера получены и сохранены в модели Catalog");
-  console.log("✅ Все методы классов проверены");
+events.on('currentProduct:changed', (data: { product: IProduct | null }) => {
+  if (!data.product) return;
+  
+  currentPreview = new PreviewCard(
+    cloneTemplate<HTMLElement>(cardPreviewTemplate),
+    events
+  );
+  
+  const inBasket = basket.isProductIn(data.product.id);
+  
+  // Используем расширенный интерфейс для рендера
+  const previewData: IPreviewData = {
+    ...data.product,
+    inBasket
+  };
+  
+  currentPreview.render(previewData);
+  currentPreview.id = data.product.id;
+  
+  // Используем геттер для получения корневого элемента
+  modal.content = currentPreview.getContainer();
+  modal.open();
 });
+
+events.on('basket:changed', (data: { items: IProduct[], total: number, count: number }) => {
+  page.counter = data.count;
+  
+  if (currentBasket) {
+    updateBasketView(data.items, data.total);
+  }
+  
+  if (currentPreview) {
+    const productId = currentPreview.id;
+    const inBasket = basket.isProductIn(productId);
+    currentPreview.inBasket = inBasket;
+  }
+});
+
+events.on('buyer:changed', (data: { buyer: IBuyer, errors: TError }) => {
+  if (currentOrder) {
+    const orderErrors = Object.keys(data.errors)
+      .filter(key => key === 'payment' || key === 'address')
+      .reduce((acc, key) => ({ ...acc, [key]: data.errors[key as keyof TError] }), {});
+    
+    currentOrder.valid = Object.keys(orderErrors).length === 0;
+    currentOrder.errors = Object.values(orderErrors);
+    currentOrder.payment = data.buyer.payment;
+    currentOrder.address = data.buyer.address;
+  }
+  
+  if (currentContacts) {
+    const contactsErrors = Object.keys(data.errors)
+      .filter(key => key === 'email' || key === 'phone')
+      .reduce((acc, key) => ({ ...acc, [key]: data.errors[key as keyof TError] }), {});
+    
+    currentContacts.valid = Object.keys(contactsErrors).length === 0;
+    currentContacts.errors = Object.values(contactsErrors);
+    currentContacts.email = data.buyer.email;
+    currentContacts.phone = data.buyer.phone;
+  }
+});
+
+// 6. ОБРАБОТЧИКИ СОБЫТИЙ ПРЕДСТАВЛЕНИЙ
+events.on('card:select', (data: { id: string }) => {
+  const product = catalog.getProductById(data.id);
+  catalog.saveCurrentProduct(product);
+});
+
+events.on('preview:add', (data: { id: string }) => {
+  const product = catalog.getProductById(data.id);
+  if (product && product.price !== null) {
+    basket.addProduct(product);
+  }
+});
+
+events.on('preview:remove', (data: { id: string }) => {
+  basket.removeProduct(data.id);
+});
+
+events.on('basket:remove', (data: { id: string }) => {
+  basket.removeProduct(data.id);
+});
+
+events.on('basket:open', () => {
+  currentBasket = new BasketView(
+    cloneTemplate<HTMLElement>(basketTemplate),
+    events
+  );
+  
+  updateBasketView(basket.getProducts(), basket.getTotalPrice());
+  
+  // Используем геттер для получения корневого элемента
+  modal.content = currentBasket.getContainer();
+  modal.open();
+});
+
+/**
+ * Вспомогательная функция для обновления отображения корзины
+ */
+function updateBasketView(items: IProduct[], total: number): void {
+  if (!currentBasket) return;
+  
+  const basketCards = items.map((item, index) => {
+    const card = new BasketCard(
+      cloneTemplate<HTMLElement>(cardBasketTemplate),
+      events
+    );
+    
+    card.render({
+      ...item,
+      price: item.price! // В корзине нет товаров без цены
+    });
+    card.id = item.id;
+    card.index = index + 1;
+    
+    // Используем геттер для получения корневого элемента
+    return card.getContainer();
+  });
+  
+  currentBasket.items = basketCards;
+  currentBasket.total = total;
+}
+
+// 7. ОБРАБОТЧИКИ ДЛЯ ФОРМЫ ЗАКАЗА (АДРЕС + ОПЛАТА)
+
+events.on('basket:order', () => {
+  currentOrder = new OrderForm(
+    cloneTemplate<HTMLFormElement>(orderTemplate),
+    events
+  );
+  
+  const buyerData = buyer.getBuyerData();
+  currentOrder.payment = buyerData.payment;
+  currentOrder.address = buyerData.address;
+  
+  const errors = buyer.validate();
+  const orderErrors = Object.keys(errors)
+    .filter(key => key === 'payment' || key === 'address')
+    .reduce((acc, key) => ({ ...acc, [key]: errors[key as keyof TError] }), {});
+  
+  currentOrder.valid = Object.keys(orderErrors).length === 0;
+  currentOrder.errors = Object.values(orderErrors);
+  
+  // Используем геттер для получения корневого элемента
+  modal.content = currentOrder.getContainer();
+  modal.open();
+});
+
+events.on('order.payment:change', (data: { payment: TPayment }) => {
+  buyer.savePayment(data.payment);
+});
+
+events.on('order.address:change', (data: { address: string }) => {
+  buyer.saveAddress(data.address);
+});
+
+events.on('order:submit', () => {
+  const errors = buyer.validate();
+  if (errors.payment || errors.address) {
+    return;
+  }
+  
+  currentContacts = new ContactsForm(
+    cloneTemplate<HTMLFormElement>(contactsTemplate),
+    events
+  );
+  
+  const buyerData = buyer.getBuyerData();
+  currentContacts.email = buyerData.email;
+  currentContacts.phone = buyerData.phone;
+  
+  const errors2 = buyer.validate();
+  const contactsErrors = Object.keys(errors2)
+    .filter(key => key === 'email' || key === 'phone')
+    .reduce((acc, key) => ({ ...acc, [key]: errors2[key as keyof TError] }), {});
+  
+  currentContacts.valid = Object.keys(contactsErrors).length === 0;
+  currentContacts.errors = Object.values(contactsErrors);
+  
+  // Используем геттер для получения корневого элемента
+  modal.content = currentContacts.getContainer();
+  modal.open();
+});
+
+// 8. ОБРАБОТЧИКИ ДЛЯ ФОРМЫ КОНТАКТОВ (EMAIL + ТЕЛЕФОН)
+
+
+events.on('contacts.email:change', (data: { email: string }) => {
+  buyer.saveEmail(data.email);
+});
+
+events.on('contacts.phone:change', (data: { phone: string }) => {
+  buyer.savePhone(data.phone);
+});
+
+events.on('contacts:submit', () => {
+  const errors = buyer.validate();
+  if (Object.keys(errors).length > 0) {
+    return;
+  }
+  
+  const order: IOrder = {
+    ...buyer.getBuyerData(),
+    items: basket.getProducts().map(p => p.id),
+    total: basket.getTotalPrice()
+  };
+  
+  appApi.postOrder(order)
+    .then((result: IOrderResult) => {
+      currentSuccess = new Success(
+        cloneTemplate<HTMLElement>(successTemplate),
+        events
+      );
+      
+      currentSuccess.total = result.total;
+      // Используем геттер для получения корневого элемента
+      modal.content = currentSuccess.getContainer();
+      
+      basket.clean();
+      buyer.clean();
+    })
+    .catch(error => {
+      console.error('Ошибка при оформлении заказа:', error);
+    });
+});
+
+// 9. ОБРАБОТЧИКИ МОДАЛЬНОГО ОКНА
+events.on('success:close', () => {
+  modal.close();
+});
+
+events.on('modal:open', () => {
+  page.locked = true;
+});
+
+events.on('modal:close', () => {
+  page.locked = false;
+  currentPreview = null;
+  currentBasket = null;
+  currentOrder = null;
+  currentContacts = null;
+  currentSuccess = null;
+});
+
+// 10. ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА
+console.log('✅ Приложение инициализировано');

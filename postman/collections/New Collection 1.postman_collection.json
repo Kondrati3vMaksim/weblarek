@@ -1,13 +1,13 @@
 {
   "info": {
-    "_postman_id": "4bb162b6-71ca-422c-abb1-3c4b3fae0e6d",
-    "name": "New Collection",
+    "_postman_id": "84eb00e8-0207-4f59-91c5-531e486cc863",
+    "name": "Wevlarek",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "New Request",
-      "id": "700ae75a-8964-42f6-bf4a-9f1c557011d1",
+      "id": "a9e436d4-2de4-4229-bc9f-f4018edd386c",
       "request": {
         "method": "GET",
         "header": [],
