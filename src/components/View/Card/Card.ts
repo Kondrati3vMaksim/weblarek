@@ -5,7 +5,7 @@ import { CDN_URL, categoryMap } from "../../../utils/constants";
 import { IProduct } from "../../../types";
 
 // Интерфейс действий для карточки
-interface ICardActions {
+export interface ICardActions {
   onClick: (event: MouseEvent) => void;
 }
 // Тип для категорий из categoryMap
@@ -22,7 +22,6 @@ export abstract class Card extends Component<IProduct> {
   constructor(
     protected container: HTMLElement,
     protected events?: IEvents,
-    actions?: ICardActions,
   ) {
     super(container);
 
@@ -34,18 +33,11 @@ export abstract class Card extends Component<IProduct> {
     this._category = container.querySelector(".card__category")!;
     this._image = container.querySelector(".card__image")!;
     this._button = container.querySelector(".card__button")!;
-
-    // Обработчик клика
-    if (actions?.onClick) {
-      if (this._button) {
-        this._button.addEventListener("click", actions.onClick);
-      } else {
-        container.addEventListener("click", actions.onClick);
-      }
-    }
   }
-
-
+  // Геттер для получения корневого элемента
+  getContainer(): HTMLElement {
+    return this.container;
+  }
 
   // Сеттер для заголовка
   set title(value: string) {
@@ -82,15 +74,5 @@ export abstract class Card extends Component<IProduct> {
     if (this._image) {
       this.setImage(this._image, CDN_URL + value, this.title);
     }
-  }
-
-  // Сеттер для ID
-  set id(value: string) {
-    this.container.dataset.id = value;
-  }
-
-  // Геттер для ID
-  get id(): string {
-    return this.container.dataset.id || "";
   }
 }

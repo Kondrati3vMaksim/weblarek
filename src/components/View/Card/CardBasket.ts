@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import { Card, ICardActions } from "./Card";
 import { IEvents } from "../../base/Events";
 import { ensureElement } from "../../../utils/utils";
 
@@ -7,7 +7,11 @@ export class BasketCard extends Card {
   protected _index: HTMLElement;
   protected _deleteButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement, events?: IEvents) {
+  constructor(
+    container: HTMLElement,
+    events?: IEvents,
+    actions?: ICardActions,
+  ) {
     super(container, events);
 
     // Элемент для порядкового номера
@@ -20,9 +24,9 @@ export class BasketCard extends Card {
     );
 
     // Обработчик удаления
-    this._deleteButton.addEventListener("click", () => {
-      events?.emit("basket:remove", { id: this.id });
-    });
+    if (actions?.onClick) {
+      this._deleteButton.addEventListener("click", actions.onClick);
+    }
   }
 
   // Сеттер для порядкового номера

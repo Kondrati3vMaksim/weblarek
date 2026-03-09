@@ -2,6 +2,11 @@ import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
+// Интерфейс действия для Success
+export interface ISuccessActions {
+  onClose: () => void;
+}
+
 // Интерфейс успешного заказа
 interface ISuccessState {
   total: number;
@@ -15,6 +20,7 @@ export class Success extends Component<ISuccessState> {
   constructor(
     container: HTMLElement,
     protected events: IEvents,
+    actions?: ISuccessActions,
   ) {
     super(container);
 
@@ -26,13 +32,18 @@ export class Success extends Component<ISuccessState> {
       ".order-success__close",
       container,
     );
-    this._button.addEventListener("click", () => {
-      events.emit("success:close");
-    });
+    if (actions?.onClose) {
+      this._button.addEventListener("click", actions.onClose);
+    }
   }
 
   // Устанавливает списанную сумму
   set total(value: number) {
     this.setText(this._description, `Списано ${value} синапсов`);
+  }
+
+  // Геттер для получения корневого элемента
+  getContainer(): HTMLElement {
+    return this.container;
   }
 }

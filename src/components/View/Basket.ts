@@ -51,6 +51,10 @@ export class Basket extends Component<IBasketState> {
 
   // Устанавливает итоговую сумму
   set total(value: number) {
-    this.setText(this._price, `${value} синапсов`)
+    this.setText(this._price, `${value} синапсов`);
+  }
+
+  getContainer(): HTMLElement {
+    return this.container;
   }
 }
