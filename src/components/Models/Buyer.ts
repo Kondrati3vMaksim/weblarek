@@ -12,28 +12,24 @@ export class Buyer {
   // Сохраняем способа оплаты
   savePayment(payment: TPayment): void {
     this.payment = payment;
-    this.events.emit("buyer.payment:changed", { payment });
     this.emitChange();
   }
 
   // Сохраняем адрес электронной почты
   saveEmail(email: string): void {
     this.email = email;
-    this.events.emit("buyer.email:changed", { email });
     this.emitChange();
   }
 
   // Сохранение телефонного номера
   savePhone(phone: string): void {
     this.phone = phone;
-    this.events.emit("buyer.phone:changed", { phone });
     this.emitChange();
   }
 
   // Сохранение адреса
   saveAddress(address: string): void {
     this.address = address;
-    this.events.emit("buyer.address:changed", { address });
     this.emitChange();
   }
 
@@ -53,7 +49,6 @@ export class Buyer {
     this.email = "";
     this.phone = "";
     this.address = "";
-    this.events.emit("buyer:cleaned");
     this.emitChange();
   }
 

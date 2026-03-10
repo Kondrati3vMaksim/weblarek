@@ -1,9 +1,4 @@
-// src/main.ts
-
-// ==============================================
 // ИМПОРТЫ
-// ==============================================
-
 import "./scss/styles.scss";
 
 // Базовые компоненты
@@ -122,7 +117,7 @@ events.on("currentProduct:changed", (data: { product: IProduct | null }) => {
     {
       onClick: () => {
         if (inBasket) {
-          events.emit("preview: remove", { id: product.id });
+          events.emit("preview:remove", { id: product.id });
         } else {
           events.emit("preview:add", { id: product.id });
         }
@@ -152,40 +147,10 @@ events.on(
       updateBasketView(data.items, data.total);
     }
 
-    // Обновляем состояние кнопки в превью, если оно открыто
     if (currentPreview && catalog.getCurrentProduct()) {
-      const productId = catalog.getCurrentProduct()!.id;
-      const inBasket = basket.isProductIn(productId);
-      const hasPrice = catalog.getCurrentProduct()!.price !== null;
-
-      // Определяем текст кнопки
-      let buttonText = "";
-      if (!hasPrice) {
-        buttonText = "Нельзя купить";
-      } else if (inBasket) {
-        buttonText = "Убрать из корзины";
-      } else {
-        buttonText = "В корзину";
-      }
-
-      currentPreview.buttonText = buttonText;
-      const newOnClick = () => {
-        if (inBasket) {
-          events.emit("preview:remove", { id: productId });
-        } else {
-          events.emit("preview:add", { id: productId });
-        }
-      };
-      const button = currentPreview["_button"];
-      if (button) {
-        button.replaceWith(button.cloneNode(true)); // Удаляем все обработчики
-        const newButton = ensureElement<HTMLButtonElement>(
-          ".card__button",
-          currentPreview.getContainer(),
-        );
-        newButton.addEventListener("click", newOnClick);
-        currentPreview["_button"] = newButton;
-      }
+      events.emit("currentProduct:changed", {
+        product: catalog.getCurrentProduct(),
+      });
     }
   },
 );
@@ -231,11 +196,21 @@ events.on("preview:add", (data: { id: string }) => {
   const product = catalog.getProductById(data.id);
   if (product && product.price !== null) {
     basket.addProduct(product);
+    if (currentPreview && catalog.getCurrentProduct()) {
+      events.emit("currentProduct:changed", {
+        product: catalog.getCurrentProduct(),
+      });
+    }
   }
 });
 
 events.on("preview:remove", (data: { id: string }) => {
   basket.removeProduct(data.id);
+  if (currentPreview && catalog.getCurrentProduct()) {
+    events.emit("currentProduct:changed", {
+      product: catalog.getCurrentProduct(),
+    });
+  }
 });
 
 events.on("basket:remove", (data: { id: string }) => {
